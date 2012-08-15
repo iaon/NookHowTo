@@ -1,0 +1,82 @@
+Main aim - build fuse.ko (kernel module) and bindfs utility for BN NOOK
+
+Build instructions:
+
+Download and install toolchain from:
+"http://www.codesourcery.com/sgpp/lite/arm/portal/release1293". Select the IA32 GNU/Linux TAR one (MD5: c6930d14801b4fab6705d72df013e58b)
+
+mkdir NOOK
+cd NOOK
+tar cvfz /path/to/nook_tablet_1-4-1.tar.gz
+
+export BOARD_KERNEL_CMDLINE="androidboot.console=ttyO0 console=ttyO0,115200n8 mem=448M@0x80000000 mem=35M@0x9CC00000 mem=512M@0xA0000000 init=/init rootwait vram=32M,9CC00000 omapfb.vram=0:5M@9CC00000"
+export ARCH=arm
+export CROSS_COMPILE=arm-none-linux-gnueabi-
+
+export PATH=~/distro/u-boot/tools:$PATH
+export PATH=~/arm-2010q1/bin:$PATH
+cd fuse-2.8.7/
+
+cd distro/x-loader
+make omap4430sdp_config
+make
+
+cd ../u-boot
+make omap4430sdp_config
+make
+
+cd ../kernel/android-2.6.35
+make android_4430BN_defconfig
+make uImage
+
+sudo apt-get install ncurses-dev
+
+
+make menuconfig
+Check FUSE support as module 
+
+
+scp ~/distro/kernel/android-2.6.35/fs/fuse/fuse.ko root@192.168.202.142:~/
+
+/data/data/berserker.android.apps.sshdroid/home # insmod fuse.ko 
+/data/data/berserker.android.apps.sshdroid/home # lsmod
+fuse 53454 0 - Live 0xbf0d4000
+tiwlan_drv 835332 0 - Live 0xbf006000
+fwram 916 0 - Live 0xbf000000
+
+export LDFLAGS="-static"
+fuse-2.8.7$ ./configure --host=arm-none-linux-gnueabi --static
+make
+
+cat ../fuse-2.8.7/fuse.pc
+
+export fuse_CFLAGS="-I${HOME}/fuse-2.8.7/include/ -D_FILE_OFFSET_BITS=64"
+export fuse_LIBS="-L${HOME}/fuse-2.8.7/lib/.libs/ -lfuse -pthread -lrt -ldl"
+export LDFLAGS=""
+
+./configure --host=arm-none-linux-gnueabi
+make
+
+Strange error 
+
+
+cd src/
+arm-none-linux-gnueabi-gcc -static -s -I/home/onushkin/fuse-2.8.7/include/ -D_FILE_OFFSET_BITS=64 -g -O2 -O2 -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=25   -o bindfs bindfs.o permchain.o userinfo.o misc.o usermap.o -L/home/onushkin/fuse-2.8.7/lib/.libs/ -lfuse -pthread -lrt -ldl
+
+mkdir /data/internal
+chmod 775 /data/internal
+chown 1000:1015 /data/internal
+
+/data # cat  boot_complete_hook.sh 
+#!/system/bin/sh
+PATH='/data/data/berserker.android.apps.sshdroid/home/bin:/data/data/berserker.android.apps.sshdroid/dropbear:/usr/bin:/usr/sbin:/bin:/sbin:/system/sbin:/system/bin:/system/xbin:/system/xbin/bb:/data/local/bin'
+cd /data
+insmod fuse.ko
+mount -o remount,rw /
+mkdir /mnt/internal
+chown 1000:1015 /mnt/internal
+chmod 755 /mnt/internal
+ln -s /mnt/internal /internal
+mount -o remount,ro /
+./bindfs  -p 0666,a+X /data/internal /mnt/internal
+
