@@ -1,0 +1,34 @@
+Initial conditions:
+Nook Tablet 16GB
+Firmware version 1.4.2
+
+1. Get root
+
+http://forum.xda-developers.com/showthread.php?t=1488035
+
+- Download http://www.mediafire.com/?r2z56nq7c8lu717
+- Unzip it and dd to sd 	
+
+#dd if=NT_SDCard.img  of=/dev/mmcblk0 bs=1024k
+
+- Insert card and reboot
+- Choose "Apply update.zip from sdcard" from boot menu
+
+2. Block OTA (automatic firmware upgrade)
+
+http://forum.xda-developers.com/showthread.php?t=1405418
+
+- Install Titanium Backup from Market
+- Download http://dl.dropbox.com/u/15069134/Unzipme.zip unzip them, and put all 3 into the TitaniumBackup folder on  sdcard
+- Restore "DeviceManagerService 2.3.4
+
+Settings>about my nook>Version Number should be 9.9.9
+
+3. Cyrillic keyboard ( lazy way :)
+
+- Install AnyCut
+- Add shortcuts for "Android keyboard Debug settings" and "Input languages"
+- Start "Input languages" and choose languages 
+- Start "Android keyboard Debug settings" and select "Keyboard theme>Stone..."
+
+
